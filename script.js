@@ -606,12 +606,27 @@ deleteWalletOverlay.addEventListener("click", e => {
 
 // --- LOGIKA ANIMASI GSAP (Helper Functions) ---
 
+function prefersReducedMotion() {
+    return (
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+}
+
 // Fungsi untuk membuka overlay
 function openOverlay(overlay, contentSelector) {
     const content = overlay.querySelector(contentSelector);
 
-    // Siapkan kondisi awal (gaib)
     overlay.style.display = "flex";
+
+    // Hormati permintaan gerak minimal: tampilkan tanpa animasi
+    if (prefersReducedMotion()) {
+        gsap.set(overlay, { opacity: 1 });
+        gsap.set(content, { opacity: 1, scale: 1, y: 0 });
+        return;
+    }
+
+    // Siapkan kondisi awal (gaib)
     gsap.set(overlay, { opacity: 0 });
     gsap.set(content, { scale: 0.8, y: 30, opacity: 0 });
 
@@ -629,6 +644,11 @@ function openOverlay(overlay, contentSelector) {
 // Fungsi untuk menutup overlay
 function closeOverlay(overlay, contentSelector) {
     const content = overlay.querySelector(contentSelector);
+
+    if (prefersReducedMotion()) {
+        overlay.style.display = "none";
+        return;
+    }
 
     // Jalankan animasi keluar
     gsap.to(content, {
@@ -938,7 +958,7 @@ function processFile(event) {
                 }));
 
                 saveAndRender();
-                alert("Data berhasil diimpor! ✅");
+                alert("Data berhasil diimpor.");
             }
         } catch (err) {
             alert("File rusak atau bukan format JSON.");
@@ -1004,6 +1024,6 @@ deleteAllBtn.addEventListener("click", () => {
         // 4. Tutup menu dengan animasi GSAP
         closeOverlay(menuOverlay, ".menu-window");
 
-        alert("Semua data telah dibersihkan! ✨");
+        alert("Semua data telah dibersihkan.");
     }
 });

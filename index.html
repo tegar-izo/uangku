@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -32,7 +32,10 @@
                     "opsz" 40;
             }
         </style>
-        <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
+        <script
+            src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"
+            defer
+        ></script>
     </head>
     <body>
         <input
@@ -43,39 +46,54 @@
         />
 
         <div class="popup-overlay" id="popup-overlay" style="display: none">
-            <div class="modal" id="modal-content">
+            <div
+                class="modal"
+                id="modal-content"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-header"
+            >
                 <div class="modal-grabber"></div>
                 <div class="modal-header" id="modal-header">
                     masukkan pemasukan
                 </div>
+                <label class="modal-label" for="input-desc">Keterangan</label>
                 <input
                     type="text"
                     id="input-desc"
-                    placeholder="Keterangan (misal: Beli Es)"
-                    aria-label="Keterangan transaksi"
+                    placeholder="misal: Beli es"
                 />
+                <label class="modal-label" for="input-value">Jumlah</label>
                 <input
                     type="text"
                     inputmode="numeric"
                     autocomplete="off"
                     id="input-value"
-                    placeholder="Jumlah (Rp)"
-                    aria-label="Jumlah transaksi"
+                    placeholder="0"
                 />
                 <button id="save-value">simpan</button>
             </div>
         </div>
 
         <div class="popup-overlay" id="wallet-overlay" style="display: none">
-            <div class="modal" id="wallet-modal">
+            <div
+                class="modal"
+                id="wallet-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="wallet-modal-header"
+            >
                 <div class="modal-grabber"></div>
                 <div class="modal-header" id="wallet-modal-header">
                     Tambah Dompet Baru
                 </div>
+                <label class="modal-label" for="input-wallet-name"
+                    >Nama dompet</label
+                >
                 <input
                     type="text"
                     id="input-wallet-name"
-                    placeholder="Nama dompet (misal: BCA, Tunai)"
+                    placeholder="misal: BCA, Tunai"
                     maxlength="24"
                 />
                 <button id="save-wallet">simpan</button>
@@ -83,9 +101,17 @@
         </div>
 
         <div class="popup-overlay" id="delete-wallet-overlay" style="display: none">
-            <div class="modal" id="delete-wallet-modal">
+            <div
+                class="modal"
+                id="delete-wallet-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-wallet-title"
+            >
                 <div class="modal-grabber"></div>
-                <div class="modal-header">Hapus Dompet</div>
+                <div class="modal-header" id="delete-wallet-title">
+                    Hapus Dompet
+                </div>
                 <p class="modal-text" id="delete-wallet-info"></p>
                 <label
                     class="modal-label"
@@ -109,33 +135,56 @@
         </div>
 
         <div class="popup-overlay" id="transfer-overlay" style="display: none">
-            <div class="modal" id="transfer-modal">
+            <div
+                class="modal"
+                id="transfer-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="transfer-title"
+            >
                 <div class="modal-grabber"></div>
-                <div class="modal-header">Transfer Antar Dompet</div>
+                <div class="modal-header" id="transfer-title">
+                    Transfer Antar Dompet
+                </div>
                 <div class="transfer-row">
-                    <select id="transfer-from" aria-label="Dompet sumber"></select>
+                    <div class="transfer-field">
+                        <label class="modal-label" for="transfer-from"
+                            >Dari dompet</label
+                        >
+                        <select id="transfer-from"></select>
+                    </div>
                     <button
                         type="button"
                         class="transfer-arrow"
                         id="swap-transfer"
                         aria-label="Tukar dompet asal dan tujuan"
                     >
-                        <span class="material-symbols-rounded">swap_horiz</span>
+                        <span class="material-symbols-rounded" aria-hidden="true"
+                            >swap_horiz</span
+                        >
                     </button>
-                    <select id="transfer-to" aria-label="Dompet tujuan"></select>
+                    <div class="transfer-field">
+                        <label class="modal-label" for="transfer-to"
+                            >Ke dompet</label
+                        >
+                        <select id="transfer-to"></select>
+                    </div>
                 </div>
+                <label class="modal-label" for="transfer-amount">Jumlah</label>
                 <input
                     type="text"
                     inputmode="numeric"
                     autocomplete="off"
                     id="transfer-amount"
-                    placeholder="Jumlah (Rp)"
-                    aria-label="Jumlah transfer"
+                    placeholder="0"
                 />
+                <label class="modal-label" for="transfer-note"
+                    >Catatan (opsional)</label
+                >
                 <input
                     type="text"
                     id="transfer-note"
-                    placeholder="Catatan (opsional)"
+                    placeholder="misal: nabung bulan ini"
                     maxlength="40"
                 />
                 <button id="save-transfer">transfer</button>
@@ -143,9 +192,15 @@
         </div>
 
         <div class="popup-overlay" id="filter-overlay" style="display: none">
-            <div class="modal" id="filter-modal">
+            <div
+                class="modal"
+                id="filter-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="filter-title"
+            >
                 <div class="modal-grabber"></div>
-                <div class="modal-header">Filter Riwayat</div>
+                <div class="modal-header" id="filter-title">Filter Riwayat</div>
                 <label class="modal-label" for="filter-wallet">Dompet</label>
                 <select id="filter-wallet"></select>
                 <label class="modal-label" for="filter-date">Tanggal</label>
@@ -162,46 +217,51 @@
         </div>
 
         <div class="menu-overlay" id="menu-overlay" style="display: none">
-            <div class="menu-window">
-                <div class="menu-title">Pengaturan</div>
+            <div
+                class="menu-window"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="menu-title"
+            >
+                <div class="menu-title" id="menu-title">Pengaturan</div>
                 <button class="menu-button export">
-                    <span class="material-symbols-rounded">upload</span>
-                    <p>export data</p>
+                    <span class="material-symbols-rounded" aria-hidden="true">upload</span>
+                    <span class="menu-label">export data</span>
                 </button>
                 <button class="menu-button import">
-                    <span class="material-symbols-rounded">download</span>
-                    <p>import data</p>
+                    <span class="material-symbols-rounded" aria-hidden="true">download</span>
+                    <span class="menu-label">import data</span>
                 </button>
                 <button class="menu-button add-wallet" id="add-wallet">
-                    <span class="material-symbols-rounded"
+                    <span class="material-symbols-rounded" aria-hidden="true"
                         >account_balance_wallet</span
                     >
-                    <p>tambah dompet</p>
+                    <span class="menu-label">tambah dompet</span>
                 </button>
                 <button class="menu-button rename-wallet" id="rename-wallet">
-                    <span class="material-symbols-rounded">edit</span>
-                    <p>ganti nama dompet</p>
+                    <span class="material-symbols-rounded" aria-hidden="true">edit</span>
+                    <span class="menu-label">ganti nama dompet</span>
                 </button>
                 <button class="menu-button transfer" id="transfer">
-                    <span class="material-symbols-rounded">swap_horiz</span>
-                    <p>transfer saldo</p>
+                    <span class="material-symbols-rounded" aria-hidden="true">swap_horiz</span>
+                    <span class="menu-label">transfer saldo</span>
                 </button>
                 <button class="menu-button theme" id="theme-toggle">
-                    <span class="material-symbols-rounded" id="theme-icon"
+                    <span class="material-symbols-rounded" aria-hidden="true" id="theme-icon"
                         >dark_mode</span
                     >
-                    <p id="theme-text">tema</p>
+                    <span class="menu-label" id="theme-text">tema</span>
                 </button>
                 <button
                     class="menu-button delete-wallet"
                     id="delete-wallet"
                 >
-                    <span class="material-symbols-rounded">delete</span>
-                    <p>hapus dompet</p>
+                    <span class="material-symbols-rounded" aria-hidden="true">delete</span>
+                    <span class="menu-label">hapus dompet</span>
                 </button>
                 <button class="menu-button delete-all" id="delete-all">
-                    <span class="material-symbols-rounded">delete_forever</span>
-                    <p>hapus semua data</p>
+                    <span class="material-symbols-rounded" aria-hidden="true">delete_forever</span>
+                    <span class="menu-label">hapus semua data</span>
                 </button>
             </div>
         </div>
@@ -210,7 +270,7 @@
             <header class="container top">
                 <div class="header">
                     <div class="welcome-text">
-                        <h3>Uangku</h3>
+                        <h1>Uangku</h1>
                         <p class="subtitle">Kelola keuanganmu dengan rapi</p>
                     </div>
                     <button
@@ -218,14 +278,14 @@
                         id="setting"
                         aria-label="Buka pengaturan"
                     >
-                        <span class="material-symbols-rounded">menu</span>
+                        <span class="material-symbols-rounded" aria-hidden="true">menu</span>
                     </button>
                 </div>
 
                 <div class="saldo">
                     <div class="saldo-header">
                         <div class="group">
-                            <span class="material-symbols-rounded"
+                            <span class="material-symbols-rounded" aria-hidden="true"
                                 >account_balance_wallet</span
                             >
                             <p>Saldo · semua dompet</p>
@@ -234,13 +294,13 @@
                     <span id="sisa-saldo">Rp 0</span>
                     <div class="cashflow">
                         <div class="flow flow-in">
-                            <span class="material-symbols-rounded"
+                            <span class="material-symbols-rounded" aria-hidden="true"
                                 >arrow_circle_down</span
                             >
                             <span id="flow-in">Rp 0</span>
                         </div>
                         <div class="flow flow-out">
-                            <span class="material-symbols-rounded"
+                            <span class="material-symbols-rounded" aria-hidden="true"
                                 >arrow_circle_up</span
                             >
                             <span id="flow-out">Rp 0</span>
@@ -255,24 +315,24 @@
                         id="wallet-add"
                         aria-label="Tambah dompet"
                     >
-                        <span class="material-symbols-rounded">add</span>
+                        <span class="material-symbols-rounded" aria-hidden="true">add</span>
                     </button>
                 </div>
             </header>
 
             <nav class="container mid">
                 <button class="action-button" id="keluar">
-                    <span class="material-symbols-rounded"
+                    <span class="material-symbols-rounded" aria-hidden="true"
                         >arrow_circle_up</span
                     >
-                    <p>keluar</p>
+                    <span class="action-label">keluar</span>
                 </button>
 
                 <button class="action-button" id="masuk">
-                    <span class="material-symbols-rounded"
+                    <span class="material-symbols-rounded" aria-hidden="true"
                         >arrow_circle_down</span
                     >
-                    <p>masuk</p>
+                    <span class="action-label">masuk</span>
                 </button>
 
                 <button
@@ -280,17 +340,22 @@
                     id="transfer-quick"
                     aria-label="Transfer antar dompet"
                 >
-                    <span class="material-symbols-rounded">swap_horiz</span>
-                    <p>transfer</p>
+                    <span class="material-symbols-rounded" aria-hidden="true">swap_horiz</span>
+                    <span class="action-label">transfer</span>
                 </button>
             </nav>
 
             <main class="container bottom">
                 <div class="history">
                     <div class="history-header">
-                        <h3>Riwayat Transaksi</h3>
-                        <button class="filter-button" id="open-filter">
-                            <span class="material-symbols-rounded"
+                        <h2>Riwayat Transaksi</h2>
+                        <button
+                            class="filter-button"
+                            id="open-filter"
+                            aria-haspopup="dialog"
+                            aria-controls="filter-modal"
+                        >
+                            <span class="material-symbols-rounded" aria-hidden="true"
                                 >filter_list</span
                             >
                             <span id="filter-label">semua</span>
@@ -301,6 +366,6 @@
                 </div>
             </main>
         </div>
-        <script src="script.js"></script>
+        <script src="script.js" defer></script>
     </body>
 </html>

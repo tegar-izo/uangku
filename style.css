@@ -1,6 +1,16 @@
 /* =========================================================
-   Uangku — lapisan tampilan
-   Semua warna diambil dari theme.css / theme-dark.css
+   Uangku: lapisan tampilan (mobile-first)
+   Arah desain dari pemilik produk: palet Material 3 di
+   theme.css/theme-dark.css, Google Sans, tema terang dan gelap.
+
+   Alasan keputusan (R-31):
+   - Radius dipakai berjenjang: 12 untuk ikon, 16 untuk input,
+     20 untuk tombol aksi, 28 untuk sheet dan header.
+   - Bayangan hanya menandai elevasi sheet, shell desktop, dan
+     chip dompet aktif. Komponen lain rata.
+   - Gerak hanya transisi sheet (GSAP) dan ikut berhenti saat
+     prefers-reduced-motion.
+   - Warna tidak ditulis di sini; semuanya token tema.
    ========================================================= */
 
 *,
@@ -11,12 +21,13 @@
     box-sizing: border-box;
 }
 
-html,
-body {
+html {
     height: 100%;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
+    height: 100%;
     font-family:
         "Google Sans",
         system-ui,
@@ -46,6 +57,24 @@ select {
     font: inherit;
 }
 
+select {
+    cursor: pointer;
+}
+
+button,
+select,
+a,
+label[for] {
+    touch-action: manipulation;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
 input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
@@ -58,7 +87,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 :focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 3px solid var(--primary);
     outline-offset: 2px;
 }
 
@@ -101,8 +130,8 @@ input[type="number"]::-webkit-inner-spin-button {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: calc(18px + env(safe-area-inset-top)) 20px 16px;
+    gap: clamp(12px, 4vw, 16px);
+    padding: calc(16px + env(safe-area-inset-top)) clamp(16px, 5vw, 20px) 14px;
     background: linear-gradient(
         180deg,
         var(--primary-container) 0%,
@@ -118,8 +147,8 @@ input[type="number"]::-webkit-inner-spin-button {
     gap: 12px;
 }
 
-.welcome-text h3 {
-    font-size: 20px;
+.welcome-text h1 {
+    font-size: clamp(19px, 5.5vw, 22px);
     font-weight: 700;
     letter-spacing: -0.02em;
     color: var(--on-surface);
@@ -132,17 +161,15 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 #setting {
+    flex-shrink: 0;
     display: grid;
     place-items: center;
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border-radius: 14px;
     background: var(--surface-container-lowest);
     color: var(--on-surface-variant);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    transition:
-        transform 0.15s ease,
-        filter 0.2s ease;
+    transition: transform 0.15s ease;
 }
 
 #setting:active {
@@ -172,9 +199,8 @@ input[type="number"]::-webkit-inner-spin-button {
     color: var(--on-surface-variant);
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 .group .material-symbols-rounded {
@@ -188,9 +214,10 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 #sisa-saldo {
-    font-size: clamp(30px, 9vw, 40px);
+    font-size: clamp(28px, 9vw, 38px);
     font-weight: 700;
-    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
     line-height: 1.1;
     color: var(--on-surface);
 }
@@ -210,6 +237,7 @@ input[type="number"]::-webkit-inner-spin-button {
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
 }
 
 .flow .material-symbols-rounded {
@@ -236,11 +264,13 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .wallet-strip {
     flex: 1;
+    min-width: 0;
     display: flex;
     gap: 8px;
     overflow-x: auto;
     padding: 2px 2px 4px;
     scroll-snap-type: x proximity;
+    scroll-padding-inline: 2px;
     scrollbar-width: none;
 }
 
@@ -251,8 +281,10 @@ input[type="number"]::-webkit-inner-spin-button {
 .wallet-chip {
     flex: 0 0 auto;
     min-width: 132px;
+    min-height: 56px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 2px;
     padding: 10px 14px;
     border: 1px solid var(--outline-variant);
@@ -278,6 +310,7 @@ input[type="number"]::-webkit-inner-spin-button {
 .wallet-chip .wallet-balance {
     font-size: 13px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
     color: var(--on-surface);
 }
 
@@ -288,7 +321,7 @@ input[type="number"]::-webkit-inner-spin-button {
 .wallet-chip.active {
     background: var(--primary);
     border-color: var(--primary);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
 }
 
 .wallet-chip.active .wallet-name,
@@ -300,15 +333,13 @@ input[type="number"]::-webkit-inner-spin-button {
     flex: 0 0 auto;
     display: grid;
     place-items: center;
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border: 1px dashed var(--outline);
     border-radius: 14px;
     background: var(--surface-container-lowest);
     color: var(--on-surface-variant);
-    transition:
-        transform 0.15s ease,
-        background 0.2s ease;
+    transition: transform 0.15s ease;
 }
 
 .wallet-add:active {
@@ -320,8 +351,8 @@ input[type="number"]::-webkit-inner-spin-button {
 .mid {
     flex-shrink: 0;
     display: flex;
-    gap: 10px;
-    padding: 14px 20px;
+    gap: clamp(8px, 2.5vw, 10px);
+    padding: clamp(12px, 3.5vw, 14px) clamp(16px, 5vw, 20px);
 }
 
 .action-button {
@@ -331,8 +362,8 @@ input[type="number"]::-webkit-inner-spin-button {
     align-items: center;
     justify-content: center;
     gap: 4px;
-    min-height: 72px;
-    padding: 10px 6px;
+    min-height: 76px;
+    padding: 10px 4px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
@@ -343,6 +374,11 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .action-button .material-symbols-rounded {
     font-size: 26px;
+}
+
+.action-label {
+    font-size: 12px;
+    line-height: 1.2;
 }
 
 .action-button:active {
@@ -370,6 +406,7 @@ input[type="number"]::-webkit-inner-spin-button {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     background: var(--background);
     border-radius: 24px 24px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
@@ -400,11 +437,12 @@ input[type="number"]::-webkit-inner-spin-button {
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 16px 20px 10px;
+    padding: 14px clamp(14px, 4.5vw, 20px) 10px;
     background: var(--background);
 }
 
-.history-header h3 {
+.history-header h2 {
+    flex-shrink: 0;
     font-size: 15px;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -415,8 +453,10 @@ input[type="number"]::-webkit-inner-spin-button {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    max-width: 150px;
-    padding: 7px 12px;
+    min-height: 44px;
+    min-width: 0;
+    max-width: 46%;
+    padding: 8px 12px;
     border: 1px solid var(--outline-variant);
     border-radius: 999px;
     background: var(--surface-container-low);
@@ -429,6 +469,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .filter-button .material-symbols-rounded {
+    flex-shrink: 0;
     font-size: 16px;
 }
 
@@ -452,7 +493,7 @@ input[type="number"]::-webkit-inner-spin-button {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    padding: 0 14px 20px;
+    padding: 0 clamp(12px, 3.5vw, 14px) 20px;
 }
 
 .history-group {
@@ -466,9 +507,9 @@ input[type="number"]::-webkit-inner-spin-button {
     align-items: center;
     gap: 10px;
     padding: 6px 4px 2px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     color: var(--on-surface-variant);
     white-space: nowrap;
 }
@@ -487,15 +528,14 @@ input[type="number"]::-webkit-inner-spin-button {
     padding: 12px 14px;
     border-radius: 18px;
     background: var(--surface-container-lowest);
-    transition: background 0.2s ease;
 }
 
 .history-icon {
     flex-shrink: 0;
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
 }
 
@@ -524,8 +564,9 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .keterangan p {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
+    line-height: 1.3;
     color: var(--on-surface);
     white-space: nowrap;
     overflow: hidden;
@@ -533,13 +574,14 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .keterangan small {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--on-surface-variant);
 }
 
 .history-value {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
     color: var(--on-surface);
 }
@@ -566,7 +608,7 @@ input[type="number"]::-webkit-inner-spin-button {
 .empty-state .material-symbols-rounded {
     font-size: 44px;
     color: var(--primary);
-    opacity: 0.4;
+    opacity: 0.5;
 }
 
 .empty-state p {
@@ -608,10 +650,14 @@ input[type="number"]::-webkit-inner-spin-button {
 .modal {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     width: 100%;
     max-width: 480px;
-    padding: 14px 20px calc(20px + env(safe-area-inset-bottom));
+    max-height: 92dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px clamp(16px, 5vw, 20px)
+        calc(20px + env(safe-area-inset-bottom));
     border-radius: 28px 28px 0 0;
     background: var(--surface);
     color: var(--on-surface);
@@ -619,6 +665,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .modal-grabber {
+    flex-shrink: 0;
     width: 44px;
     height: 4px;
     margin: 0 auto 4px;
@@ -642,6 +689,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .modal-label {
+    margin-top: 2px;
     font-size: 12px;
     font-weight: 600;
     color: var(--on-surface-variant);
@@ -658,12 +706,14 @@ input[type="number"]::-webkit-inner-spin-button {
 #filter-wallet,
 #filter-date {
     width: 100%;
-    padding: 13px 16px;
+    min-height: 48px;
+    padding: 12px 16px;
     border: 1px solid var(--outline-variant);
     border-radius: 16px;
     background: var(--surface-container-high);
     color: var(--on-surface);
-    outline: none;
+    /* 16px mencegah zoom otomatis iOS saat fokus */
+    font-size: 16px;
     transition:
         border-color 0.2s ease,
         box-shadow 0.2s ease;
@@ -671,38 +721,42 @@ input[type="number"]::-webkit-inner-spin-button {
 
 #input-desc,
 #input-wallet-name,
-#input-value,
-#transfer-amount,
 #transfer-note {
-    text-align: center;
+    text-align: left;
 }
 
 #input-value,
 #transfer-amount {
+    text-align: center;
     font-size: 18px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
-#input-desc:focus,
-#input-value:focus,
-#input-wallet-name:focus,
-#transfer-amount:focus,
-#transfer-note:focus,
-#move-wallet-target:focus,
-#transfer-from:focus,
-#transfer-to:focus {
+#input-desc:focus-visible,
+#input-value:focus-visible,
+#input-wallet-name:focus-visible,
+#transfer-amount:focus-visible,
+#transfer-note:focus-visible,
+#move-wallet-target:focus-visible,
+#transfer-from:focus-visible,
+#transfer-to:focus-visible,
+#filter-wallet:focus-visible,
+#filter-date:focus-visible {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px var(--primary-container);
+    outline: 3px solid var(--primary);
+    outline-offset: 1px;
 }
 
 #save-value,
 #save-wallet,
 #save-transfer {
-    padding: 14px;
+    min-height: 48px;
+    padding: 12px;
     border-radius: 16px;
     background: var(--primary);
     color: var(--on-primary);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     transition:
         filter 0.2s ease,
@@ -723,27 +777,36 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .transfer-row {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 8px;
 }
 
-.transfer-row select {
+.transfer-field {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.transfer-field .modal-label {
+    margin: 0;
+}
+
+.transfer-field select {
+    width: 100%;
 }
 
 .transfer-arrow {
     flex-shrink: 0;
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     border-radius: 12px;
     background: var(--surface-container-high);
     color: var(--on-surface-variant);
-    transition:
-        transform 0.15s ease,
-        background 0.2s ease;
+    transition: transform 0.15s ease;
 }
 
 .transfer-arrow .material-symbols-rounded {
@@ -757,11 +820,13 @@ input[type="number"]::-webkit-inner-spin-button {
 .modal-actions {
     display: flex;
     gap: 10px;
+    margin-top: 4px;
 }
 
 .modal-button {
     flex: 1;
-    padding: 13px;
+    min-height: 48px;
+    padding: 12px;
     border-radius: 16px;
     font-size: 14px;
     font-weight: 700;
@@ -790,6 +855,9 @@ input[type="number"]::-webkit-inner-spin-button {
     flex-direction: column;
     gap: 2px;
     width: min(300px, calc(100% - 32px));
+    max-height: calc(100dvh - 88px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     margin-top: calc(64px + env(safe-area-inset-top));
     padding: 8px;
     border: 1px solid var(--outline-variant);
@@ -802,7 +870,7 @@ input[type="number"]::-webkit-inner-spin-button {
     padding: 8px 12px 4px;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--on-surface-variant);
 }
@@ -812,22 +880,24 @@ input[type="number"]::-webkit-inner-spin-button {
     align-items: center;
     gap: 10px;
     width: 100%;
-    padding: 11px 12px;
+    min-height: 48px;
+    padding: 10px 12px;
     border-radius: 14px;
     background: transparent;
     color: var(--on-surface);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     text-align: left;
     transition: background 0.18s ease;
 }
 
 .menu-button .material-symbols-rounded {
+    flex-shrink: 0;
     font-size: 20px;
     color: var(--on-surface-variant);
 }
 
-.menu-button p {
+.menu-label {
     flex: 1;
 }
 
@@ -848,6 +918,41 @@ input[type="number"]::-webkit-inner-spin-button {
 .menu-button.delete-all .material-symbols-rounded,
 .menu-button.delete-wallet .material-symbols-rounded {
     color: var(--error);
+}
+
+/* ---------- Layar sempit ---------- */
+
+@media (max-width: 359px) {
+    .wallet-chip {
+        min-width: 118px;
+    }
+
+    .action-label {
+        font-size: 11px;
+    }
+
+    .history-header h2 {
+        font-size: 14px;
+    }
+
+    .filter-button {
+        max-width: 50%;
+    }
+}
+
+/* ---------- Layar lebar: dialog di tengah, bukan sheet ---------- */
+
+@media (min-width: 700px) {
+    .popup-overlay {
+        align-items: center;
+    }
+
+    .modal {
+        border-radius: 28px;
+        margin: 24px 0;
+        max-height: min(88vh, 720px);
+        padding-bottom: 20px;
+    }
 }
 
 /* ---------- Preferensi pengguna ---------- */
