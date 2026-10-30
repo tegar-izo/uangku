@@ -1,0 +1,6 @@
+
+# antislop skills (lokal, jangan di-commit)
+.agents/
+.claude/
+agent/
+skills-lock.json
