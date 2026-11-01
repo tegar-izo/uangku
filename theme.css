@@ -1,51 +1,82 @@
+/* Token tema mengikuti bahasa desain tegar-izo.github.io:
+   latar hijau gelap berpola titik, aksen hijau neon, kartu kaca
+   berbingkai tipis, dan radius besar.
+   Tema aktif dipilih lewat atribut data-theme pada <html>. */
+
 :root {
-    --primary: rgb(65 95 145);
-    --surface-tint: rgb(65 95 145);
-    --on-primary: rgb(255 255 255);
-    --primary-container: rgb(214 227 255);
-    --on-primary-container: rgb(40 71 119);
-    --secondary: rgb(86 95 113);
-    --on-secondary: rgb(255 255 255);
-    --secondary-container: rgb(218 226 249);
-    --on-secondary-container: rgb(62 71 89);
-    --tertiary: rgb(112 85 117);
-    --on-tertiary: rgb(255 255 255);
-    --tertiary-container: rgb(250 216 253);
-    --on-tertiary-container: rgb(87 62 92);
-    --error: rgb(186 26 26);
-    --on-error: rgb(255 255 255);
-    --error-container: rgb(255 218 214);
-    --on-error-container: rgb(147 0 10);
-    --background: rgb(249 249 255);
-    --on-background: rgb(25 28 32);
-    --surface: rgb(249 249 255);
-    --on-surface: rgb(25 28 32);
-    --surface-variant: rgb(224 226 236);
-    --on-surface-variant: rgb(68 71 78);
-    --outline: rgb(116 119 127);
-    --outline-variant: rgb(196 198 208);
-    --shadow: rgb(0 0 0);
-    --scrim: rgb(0 0 0);
-    --inverse-surface: rgb(46 48 54);
-    --inverse-on-surface: rgb(240 240 247);
-    --inverse-primary: rgb(170 199 255);
-    --primary-fixed: rgb(214 227 255);
-    --on-primary-fixed: rgb(0 27 62);
-    --primary-fixed-dim: rgb(170 199 255);
-    --on-primary-fixed-variant: rgb(40 71 119);
-    --secondary-fixed: rgb(218 226 249);
-    --on-secondary-fixed: rgb(19 28 43);
-    --secondary-fixed-dim: rgb(190 198 220);
-    --on-secondary-fixed-variant: rgb(62 71 89);
-    --tertiary-fixed: rgb(250 216 253);
-    --on-tertiary-fixed: rgb(40 19 46);
-    --tertiary-fixed-dim: rgb(221 188 224);
-    --on-tertiary-fixed-variant: rgb(87 62 92);
-    --surface-dim: rgb(217 217 224);
-    --surface-bright: rgb(249 249 255);
-    --surface-container-lowest: rgb(255 255 255);
-    --surface-container-low: rgb(243 243 250);
-    --surface-container: rgb(237 237 244);
-    --surface-container-high: rgb(231 232 238);
-    --surface-container-highest: rgb(226 226 233);
+    color-scheme: dark;
+
+    /* Warna inti */
+    --bg: #07150c;
+    --bg-rgb: 7, 21, 12;
+    --bg-dot: #12311c;
+    --primary: #2ecc71;
+    --primary-rgb: 46, 204, 113;
+    --on-primary: #06170d;
+
+    /* Permukaan kaca */
+    --card-bg: rgba(13, 36, 23, 0.6);
+    --glass-soft: rgba(255, 255, 255, 0.045);
+    --field-bg: rgba(255, 255, 255, 0.05);
+    --glass-line: #ffffff30;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --hover-tint: rgba(var(--primary-rgb), 0.1);
+    --scrim: rgba(2, 9, 5, 0.62);
+
+    /* Teks */
+    --text: #e8f5e9;
+    --text-muted: #a5d6a7;
+
+    /* Warna semantik transaksi */
+    --danger: #ff8b7e;
+    --danger-rgb: 255, 139, 126;
+
+    /* Radius */
+    --radius: 45px;
+    --radius-sm: 20px;
+    --radius-pill: 100px;
+
+    /* Tipografi */
+    --fs-lg: 1.5rem;
+    --fs-sm: 0.95rem;
+    --fs-xs: 0.85rem;
+
+    /* Efek */
+    --blur-card: 12px;
+    --blur-panel: 30px;
+    --hover-scale: 1.06;
+    --shadow-soft: 0 18px 48px rgba(0, 0, 0, 0.45);
+    --glow: 0 10px 26px rgba(var(--primary-rgb), 0.22);
+
+    /* Transisi */
+    --transition-fast: all 0.25s ease-in-out;
+    --transition: all 0.3s ease;
+}
+
+html[data-theme="light"] {
+    color-scheme: light;
+
+    --bg: #f2fbf4;
+    --bg-rgb: 242, 251, 244;
+    --bg-dot: #cfe9d6;
+    --primary: #12873f;
+    --primary-rgb: 18, 135, 63;
+    --on-primary: #ffffff;
+
+    --card-bg: rgba(255, 255, 255, 0.72);
+    --glass-soft: rgba(255, 255, 255, 0.7);
+    --field-bg: rgba(255, 255, 255, 0.85);
+    --glass-line: rgba(7, 21, 12, 0.14);
+    --border-subtle: rgba(7, 21, 12, 0.09);
+    --hover-tint: rgba(var(--primary-rgb), 0.1);
+    --scrim: rgba(7, 21, 12, 0.32);
+
+    --text: #0b1f14;
+    --text-muted: #3d6a51;
+
+    --danger: #c0261a;
+    --danger-rgb: 192, 38, 26;
+
+    --shadow-soft: 0 18px 48px rgba(7, 21, 12, 0.16);
+    --glow: 0 10px 26px rgba(var(--primary-rgb), 0.25);
 }

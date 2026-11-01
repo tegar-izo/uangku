@@ -36,21 +36,24 @@ let currentType = "masuk";
 let historyFilter = { walletId: "all", date: "all" };
 
 // --- Elemen DOM ---
-const themeLink = document.getElementById("theme-link");
 const themeToggle = document.getElementById("theme-toggle");
 const themeIcon = document.getElementById("theme-icon");
 const themeText = document.getElementById("theme-text");
 
 const popupOverlay = document.getElementById("popup-overlay");
-const menuOverlay = document.getElementById("menu-overlay");
 const modalHeader = document.getElementById("modal-header");
 const inputValue = document.getElementById("input-value");
 const historyList = document.getElementById("history-list");
+const todayList = document.getElementById("today-list");
 const sisaSaldo = document.getElementById("sisa-saldo");
 const flowIn = document.getElementById("flow-in");
 const flowOut = document.getElementById("flow-out");
 const walletStrip = document.getElementById("wallet-strip");
 const walletAdd = document.getElementById("wallet-add");
+const inputWallet = document.getElementById("input-wallet");
+const renameWalletLabel = document.getElementById("rename-wallet-label");
+const renameWalletSelect = document.getElementById("rename-wallet-select");
+const deleteWalletSelect = document.getElementById("delete-wallet-select");
 const walletOverlay = document.getElementById("wallet-overlay");
 const walletModalHeader = document.getElementById("wallet-modal-header");
 const inputWalletName = document.getElementById("input-wallet-name");
@@ -69,24 +72,27 @@ const filterDate = document.getElementById("filter-date");
 const filterLabel = document.getElementById("filter-label");
 const filterButton = document.getElementById("open-filter");
 
-// --- LOGIKA TEMA (BARU) ---
+// --- LOGIKA TEMA ---
 
-// 1. Fungsi untuk set tema
+// 1. Fungsi untuk set tema (mengganti atribut data-theme di <html>)
 function applyTheme(theme) {
-    if (theme === "dark") {
-        themeLink.setAttribute("href", "theme-dark.css");
-        themeIcon.innerText = "light_mode"; // Ikon berubah jadi matahari saat gelap
-        themeText.innerText = "Mode Terang";
-    } else {
-        themeLink.setAttribute("href", "theme.css");
-        themeIcon.innerText = "dark_mode"; // Ikon berubah jadi bulan saat terang
-        themeText.innerText = "Mode Gelap";
-    }
-    localStorage.setItem("selected_theme", theme);
+    const isDark = theme === "dark";
+
+    // Token warna gelap ada di theme.css, aktif lewat atribut ini
+    document.documentElement.dataset.theme = isDark ? "dark" : "light";
+
+    // Ikon pada <use> mengacu ke symbol di sprite inline
+    themeIcon.setAttribute(
+        "href",
+        isDark ? "#i-light_mode" : "#i-dark_mode" // matahari saat gelap, bulan saat terang
+    );
+    themeText.innerText = isDark ? "Mode Terang" : "Mode Gelap";
+
+    localStorage.setItem("selected_theme", isDark ? "dark" : "light");
 }
 
 // 2. Cek tema saat aplikasi pertama dimuat
-const savedTheme = localStorage.getItem("selected_theme") || "light";
+const savedTheme = localStorage.getItem("selected_theme") || "dark";
 applyTheme(savedTheme);
 
 // 3. Event Listener Klik Tombol Tema
@@ -94,7 +100,6 @@ themeToggle.addEventListener("click", () => {
     const currentTheme = localStorage.getItem("selected_theme");
     const newTheme = currentTheme === "light" ? "dark" : "light";
     applyTheme(newTheme);
-    closeOverlay(menuOverlay, ".menu-window"); // Menutup dengan animasi GSAP
 });
 
 // --- LOGIKA DOMPET ---
@@ -175,31 +180,19 @@ function getWalletBalance(walletId) {
     }, 0);
 }
 
-function selectWallet(walletId) {
-    activeWalletId = walletId;
-    saveWallets();
-    saveAndRender();
-}
-
+// Strip dompet hanya untuk melihat saldo: tampil sebagai pil satu baris
+// tanpa aksi klik. Pemilihan dompet dilakukan di dropdown tiap formulir.
 function renderWallets() {
     walletStrip.innerHTML = wallets
         .map(
             wallet => `
-            <button
-                class="wallet-chip ${wallet.id === activeWalletId ? "active" : ""}"
-                data-wallet-id="${escapeHtml(wallet.id)}"
-                aria-pressed="${wallet.id === activeWalletId}"
-            >
+            <div class="wallet-pill">
                 <span class="wallet-name">${escapeHtml(wallet.name)}</span>
                 <span class="wallet-balance">${formatRupiah(getWalletBalance(wallet.id))}</span>
-            </button>
+            </div>
         `
         )
         .join("");
-
-    walletStrip.querySelectorAll(".wallet-chip").forEach(chip => {
-        chip.addEventListener("click", () => selectWallet(chip.dataset.walletId));
-    });
 }
 
 let walletFormMode = "create";
@@ -211,23 +204,41 @@ function openWalletModal(mode = "create") {
     walletModalHeader.innerText = isRename
         ? "Ganti Nama Dompet"
         : "Tambah Dompet Baru";
-    inputWalletName.value = isRename ? getActiveWallet().name : "";
 
-    openOverlay(walletOverlay, ".modal");
+    // Pemilih dompet hanya relevan saat mengganti nama
+    renameWalletLabel.style.display = isRename ? "" : "none";
+    renameWalletSelect.style.display = isRename ? "" : "none";
+
+    if (isRename) {
+        fillWalletOptions(renameWalletSelect, wallets, activeWalletId);
+        inputWalletName.value =
+            wallets.find(w => w.id === renameWalletSelect.value)?.name || "";
+    } else {
+        inputWalletName.value = "";
+    }
+
+    openOverlay(walletOverlay);
     setTimeout(() => inputWalletName.focus(), 250);
 }
+
+// Saat dompet yang dipilih diganti, isi kolom nama mengikuti dompet itu
+renameWalletSelect.addEventListener("change", () => {
+    const wallet = wallets.find(w => w.id === renameWalletSelect.value);
+    inputWalletName.value = wallet ? wallet.name : "";
+});
 
 function submitWallet() {
     const name = inputWalletName.value.trim();
     if (!name) return alert("Nama dompet tidak boleh kosong!");
 
     if (walletFormMode === "rename") {
-        const wallet = wallets.find(w => w.id === activeWalletId);
+        const wallet = wallets.find(w => w.id === renameWalletSelect.value);
         if (!wallet) return;
 
         wallet.name = name;
+        activeWalletId = wallet.id;
         saveWallets();
-        closeOverlay(walletOverlay, ".modal");
+        closeOverlay(walletOverlay);
         saveAndRender();
         return;
     }
@@ -237,7 +248,7 @@ function submitWallet() {
     activeWalletId = wallet.id;
 
     saveWallets();
-    closeOverlay(walletOverlay, ".modal");
+    closeOverlay(walletOverlay);
     saveAndRender();
 }
 
@@ -250,7 +261,24 @@ function openDeleteWalletModal() {
         );
     }
 
-    const wallet = getActiveWallet();
+    fillWalletOptions(deleteWalletSelect, wallets, activeWalletId);
+    updateDeleteWalletInfo();
+
+    openOverlay(deleteWalletOverlay);
+}
+
+function getWalletToDelete() {
+    return (
+        wallets.find(w => w.id === deleteWalletSelect.value) ||
+        getActiveWallet()
+    );
+}
+
+// Info ringkasan dan tujuan pemindahan mengikuti dompet yang dipilih
+function updateDeleteWalletInfo() {
+    const wallet = getWalletToDelete();
+    if (!wallet) return;
+
     const count = transactions.filter(item => item.walletId === wallet.id).length;
     const targets = wallets.filter(w => w.id !== wallet.id);
     const hasTransactions = count > 0;
@@ -267,17 +295,17 @@ function openDeleteWalletModal() {
                 `<option value="${escapeHtml(target.id)}">${escapeHtml(target.name)}</option>`
         )
         .join("");
-
-    openOverlay(deleteWalletOverlay, ".modal");
 }
+
+deleteWalletSelect.addEventListener("change", updateDeleteWalletInfo);
 
 function confirmDeleteWallet() {
     if (wallets.length <= 1) {
-        closeOverlay(deleteWalletOverlay, ".modal");
+        closeOverlay(deleteWalletOverlay);
         return;
     }
 
-    const wallet = getActiveWallet();
+    const wallet = getWalletToDelete();
     const remaining = wallets.filter(w => w.id !== wallet.id);
     const hasTransactions = transactions.some(
         item => item.walletId === wallet.id
@@ -306,7 +334,7 @@ function confirmDeleteWallet() {
     }
 
     saveWallets();
-    closeOverlay(deleteWalletOverlay, ".modal");
+    closeOverlay(deleteWalletOverlay);
     saveAndRender();
 }
 
@@ -391,7 +419,7 @@ function openTransferModal() {
     inputTransferAmount.value = "";
     inputTransferNote.value = "";
 
-    openOverlay(transferOverlay, ".modal");
+    openOverlay(transferOverlay);
 }
 
 function saveTransfer() {
@@ -437,18 +465,15 @@ function saveTransfer() {
     );
 
     saveAndRender();
-    closeOverlay(transferOverlay, ".modal");
+    closeOverlay(transferOverlay);
 }
 
-document.getElementById("transfer").addEventListener("click", () => {
-    closeOverlay(menuOverlay, ".menu-window");
-    openTransferModal();
-});
+document.getElementById("transfer").addEventListener("click", openTransferModal);
 
 document.getElementById("save-transfer").addEventListener("click", saveTransfer);
 
 transferOverlay.addEventListener("click", e => {
-    if (e.target === transferOverlay) closeOverlay(transferOverlay, ".modal");
+    if (e.target === transferOverlay) closeOverlay(transferOverlay);
 });
 
 transferFrom.addEventListener("change", () =>
@@ -483,14 +508,10 @@ document.addEventListener("keydown", e => {
     ].forEach(
         overlay => {
             if (overlay.style.display === "flex") {
-                closeOverlay(overlay, ".modal");
+                closeOverlay(overlay);
             }
         }
     );
-
-    if (menuOverlay.style.display === "flex") {
-        closeOverlay(menuOverlay, ".menu-window");
-    }
 });
 
 // --- FILTER RIWAYAT ---
@@ -542,21 +563,21 @@ function openFilterModal() {
     ].join("");
     filterDate.value = historyFilter.date;
 
-    openOverlay(filterOverlay, ".modal");
+    openOverlay(filterOverlay);
 }
 
 function applyHistoryFilter() {
     historyFilter.walletId = filterWallet.value || "all";
     historyFilter.date = filterDate.value || "all";
 
-    closeOverlay(filterOverlay, ".modal");
+    closeOverlay(filterOverlay);
     saveAndRender();
 }
 
 function resetHistoryFilter() {
     historyFilter = { walletId: "all", date: "all" };
 
-    closeOverlay(filterOverlay, ".modal");
+    closeOverlay(filterOverlay);
     saveAndRender();
 }
 
@@ -569,25 +590,18 @@ document
     .addEventListener("click", resetHistoryFilter);
 
 filterOverlay.addEventListener("click", e => {
-    if (e.target === filterOverlay) closeOverlay(filterOverlay, ".modal");
+    if (e.target === filterOverlay) closeOverlay(filterOverlay);
 });
 
 walletAdd.addEventListener("click", () => openWalletModal("create"));
 
-document.getElementById("add-wallet").addEventListener("click", () => {
-    closeOverlay(menuOverlay, ".menu-window");
-    openWalletModal("create");
-});
+document
+    .getElementById("rename-wallet")
+    .addEventListener("click", () => openWalletModal("rename"));
 
-document.getElementById("rename-wallet").addEventListener("click", () => {
-    closeOverlay(menuOverlay, ".menu-window");
-    openWalletModal("rename");
-});
-
-document.getElementById("delete-wallet").addEventListener("click", () => {
-    closeOverlay(menuOverlay, ".menu-window");
-    openDeleteWalletModal();
-});
+document
+    .getElementById("delete-wallet")
+    .addEventListener("click", openDeleteWalletModal);
 
 document.getElementById("save-wallet").addEventListener("click", submitWallet);
 
@@ -596,15 +610,18 @@ inputWalletName.addEventListener("keydown", e => {
 });
 
 walletOverlay.addEventListener("click", e => {
-    if (e.target === walletOverlay) closeOverlay(walletOverlay, ".modal");
+    if (e.target === walletOverlay) closeOverlay(walletOverlay);
 });
 
 deleteWalletOverlay.addEventListener("click", e => {
     if (e.target === deleteWalletOverlay)
-        closeOverlay(deleteWalletOverlay, ".modal");
+        closeOverlay(deleteWalletOverlay);
 });
 
-// --- LOGIKA ANIMASI GSAP (Helper Functions) ---
+// --- ANIMASI OVERLAY (CSS transition, tanpa library) ---
+
+// Samakan dengan durasi transisi di style.css
+const OVERLAY_DURATION = 300;
 
 function prefersReducedMotion() {
     return (
@@ -614,58 +631,34 @@ function prefersReducedMotion() {
 }
 
 // Fungsi untuk membuka overlay
-function openOverlay(overlay, contentSelector) {
-    const content = overlay.querySelector(contentSelector);
-
+function openOverlay(overlay) {
+    clearTimeout(overlay._hideTimer);
     overlay.style.display = "flex";
 
-    // Hormati permintaan gerak minimal: tampilkan tanpa animasi
     if (prefersReducedMotion()) {
-        gsap.set(overlay, { opacity: 1 });
-        gsap.set(content, { opacity: 1, scale: 1, y: 0 });
+        overlay.classList.add("is-open");
         return;
     }
 
-    // Siapkan kondisi awal (gaib)
-    gsap.set(overlay, { opacity: 0 });
-    gsap.set(content, { scale: 0.8, y: 30, opacity: 0 });
-
-    // Jalankan animasi masuk
-    gsap.to(overlay, { opacity: 1, duration: 0.3 });
-    gsap.to(content, {
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        duration: 0.5,
-        ease: "back.out(1.7)"
+    // Tunggu satu frame agar transisi berjalan dari kondisi tertutup
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => overlay.classList.add("is-open"));
     });
 }
 
 // Fungsi untuk menutup overlay
-function closeOverlay(overlay, contentSelector) {
-    const content = overlay.querySelector(contentSelector);
+function closeOverlay(overlay) {
+    overlay.classList.remove("is-open");
 
     if (prefersReducedMotion()) {
         overlay.style.display = "none";
         return;
     }
 
-    // Jalankan animasi keluar
-    gsap.to(content, {
-        opacity: 0,
-        scale: 0.8,
-        y: 30,
-        duration: 0.3,
-        ease: "power2.in"
-    });
-
-    gsap.to(overlay, {
-        opacity: 0,
-        duration: 0.3,
-        onComplete: () => {
-            overlay.style.display = "none"; // Baru di-hide setelah animasi selesai
-        }
-    });
+    clearTimeout(overlay._hideTimer);
+    overlay._hideTimer = setTimeout(() => {
+        overlay.style.display = "none";
+    }, OVERLAY_DURATION);
 }
 
 // --- LOGIKA TRANSAKSI ---
@@ -673,12 +666,15 @@ function closeOverlay(overlay, contentSelector) {
 function showPopUp(type) {
     currentType = type;
     // Buka dengan animasi GSAP
-    openOverlay(popupOverlay, ".modal");
+    openOverlay(popupOverlay);
 
     modalHeader.innerText =
         type === "masuk" ? "Tambah Pemasukan" : "Catat Pengeluaran";
     document.getElementById("input-value").value = "";
     document.getElementById("input-desc").value = "";
+
+    // Dompet tujuan transaksi dipilih di sini, default dompet terakhir dipakai
+    fillWalletOptions(inputWallet, wallets, activeWalletId);
 }
 
 document
@@ -687,17 +683,10 @@ document
 document
     .getElementById("keluar")
     .addEventListener("click", () => showPopUp("keluar"));
-document
-    .getElementById("setting")
-    .addEventListener("click", () => openOverlay(menuOverlay, ".menu-window"));
 
 // Menutup overlay saat klik area luar
 popupOverlay.addEventListener("click", e => {
-    if (e.target === popupOverlay) closeOverlay(popupOverlay, ".modal");
-});
-
-menuOverlay.addEventListener("click", e => {
-    if (e.target === menuOverlay) closeOverlay(menuOverlay, ".menu-window");
+    if (e.target === popupOverlay) closeOverlay(popupOverlay);
 });
 
 document.getElementById("save-value").addEventListener("click", () => {
@@ -707,19 +696,26 @@ document.getElementById("save-value").addEventListener("click", () => {
 
     if (!value || value <= 0) return alert("Masukkan jumlah yang valid!");
 
+    const walletId = inputWallet.value;
+    if (!wallets.some(wallet => wallet.id === walletId)) {
+        return alert("Pilih dompet yang valid!");
+    }
+
     const newTransaction = {
         id: Date.now(),
         type: currentType,
         amount: value,
         description: desc,
         date: new Date().toLocaleDateString(),
-        walletId: activeWalletId
+        walletId
     };
 
+    // Ingat dompet terakhir agar default dropdown berikutnya konsisten
+    activeWalletId = walletId;
     transactions.unshift(newTransaction);
     saveAndRender();
     // Tutup dengan animasi GSAP
-    closeOverlay(popupOverlay, ".modal");
+    closeOverlay(popupOverlay);
 });
 
 // Tampilkan pemisah ribuan sambil mengetik
@@ -738,6 +734,200 @@ function escapeHtml(value) {
                 "'": "&#39;"
             })[char]
     );
+}
+
+// --- RENDER RIWAYAT BERTAHAP ---
+// Ribuan transaksi tidak dirender sekaligus: halaman pertama diisi
+// HISTORY_PAGE_SIZE baris, sisanya ditambahkan saat pengguna menggulir.
+
+const HISTORY_PAGE_SIZE = 40;
+
+let historyItems = []; // transaksi hasil filter yang aktif
+let historyCursor = 0; // jumlah baris yang sudah dirender
+let historyLastGroup = null; // <section> terakhir (untuk menambah hari yang sama)
+let historyLastDate = null;
+let historyObserver = null;
+
+function getFilteredTransactions() {
+    return transactions.filter(item => {
+        if (
+            historyFilter.walletId !== "all" &&
+            item.walletId !== historyFilter.walletId
+        ) {
+            return false;
+        }
+        if (
+            historyFilter.date !== "all" &&
+            (item.date || "") !== historyFilter.date
+        ) {
+            return false;
+        }
+        return true;
+    });
+}
+
+function createHistoryRow(item) {
+    // Normalisasi tipe agar tidak bisa dipakai menyisipkan atribut HTML
+    const type = item.type === "masuk" ? "masuk" : "keluar";
+    const amount = Number(item.amount) || 0;
+    const icon = item.transfer
+        ? "swap_horiz"
+        : type === "masuk"
+          ? "arrow_circle_down"
+          : "arrow_circle_up";
+
+    return `
+            <div class="history-item ${type}${item.transfer ? " transfer" : ""}">
+                <div class="history-icon">
+                    <svg class="material-symbols-rounded" aria-hidden="true"><use href="#i-${icon}"></use></svg>
+                </div>
+                <div class="keterangan">
+                    <p>${escapeHtml(item.description || "Tanpa keterangan")}</p>
+                    <small>${escapeHtml(getWalletName(item.walletId))}</small>
+                </div>
+                <span class="history-value">${type === "masuk" ? "+" : "-"}${amount.toLocaleString("id-ID")}</span>
+            </div>
+        `;
+}
+
+function resetHistoryPagination() {
+    historyCursor = 0;
+    historyLastGroup = null;
+    historyLastDate = null;
+
+    if (historyObserver) {
+        historyObserver.disconnect();
+        historyObserver = null;
+    }
+
+    historyList.innerHTML = "";
+}
+
+// Tombol "tampilkan lagi" sekaligus pemicu otomatis saat masuk viewport
+function updateHistoryMore() {
+    const remaining = historyItems.length - historyCursor;
+    let button = historyList.querySelector(".history-more");
+
+    if (remaining <= 0) {
+        if (button) button.remove();
+        if (historyObserver) {
+            historyObserver.disconnect();
+            historyObserver = null;
+        }
+        return;
+    }
+
+    if (!button) {
+        button = document.createElement("button");
+        button.type = "button";
+        button.className = "history-more";
+        button.addEventListener("click", appendHistoryPage);
+    }
+
+    // Selalu jaga tombol tetap di urutan terakhir
+    historyList.appendChild(button);
+    button.textContent = `tampilkan ${remaining} transaksi lagi`;
+
+    if (typeof IntersectionObserver !== "function") return;
+
+    if (!historyObserver) {
+        historyObserver = new IntersectionObserver(
+            entries => {
+                if (entries.some(entry => entry.isIntersecting)) {
+                    appendHistoryPage();
+                }
+            },
+            { root: historyList.closest(".view-scroll"), rootMargin: "200px" }
+        );
+    }
+
+    historyObserver.observe(button);
+}
+
+function appendHistoryPage() {
+    const slice = historyItems.slice(
+        historyCursor,
+        historyCursor + HISTORY_PAGE_SIZE
+    );
+    if (!slice.length) return;
+
+    const fragment = document.createDocumentFragment();
+    let group = historyLastGroup;
+    let groupDate = historyLastDate;
+
+    slice.forEach(item => {
+        const dateKey = item.date || "";
+
+        // Lanjutkan grup tanggal yang sama meski melewati batas halaman
+        if (!group || dateKey !== groupDate) {
+            group = document.createElement("section");
+            group.className = "history-group";
+
+            const day = document.createElement("div");
+            day.className = "history-day";
+            day.textContent = getDateLabel(dateKey);
+            group.appendChild(day);
+
+            fragment.appendChild(group);
+            groupDate = dateKey;
+        }
+
+        group.insertAdjacentHTML("beforeend", createHistoryRow(item));
+    });
+
+    historyLastGroup = group;
+    historyLastDate = groupDate;
+    historyCursor += slice.length;
+
+    historyList.appendChild(fragment);
+    updateHistoryMore();
+}
+
+function renderHistory() {
+    resetHistoryPagination();
+
+    historyItems = getFilteredTransactions();
+
+    const isFiltered =
+        historyFilter.walletId !== "all" || historyFilter.date !== "all";
+
+    if (!historyItems.length) {
+        historyList.innerHTML = `
+            <div class="empty-state">
+                <svg class="material-symbols-rounded" aria-hidden="true"><use href="#i-${isFiltered ? "filter_list_off" : "savings"}"></use></svg>
+                <p>${isFiltered ? "Tidak ada transaksi untuk filter ini." : "Belum ada transaksi."}</p>
+                <small>${isFiltered ? "Coba ubah atau reset filternya." : 'Tekan "masuk" atau "keluar" untuk mulai mencatat.'}</small>
+            </div>
+        `;
+        return;
+    }
+
+    appendHistoryPage();
+}
+
+// --- RINGKASAN HARI INI (BERANDA) ---
+
+function getTodayTransactions() {
+    const today = new Date().toLocaleDateString();
+    return transactions.filter(item => (item.date || "") === today);
+}
+
+function renderTodaySummary() {
+    const items = getTodayTransactions();
+
+    if (!items.length) {
+        todayList.innerHTML = `
+            <div class="empty-state">
+                <svg class="material-symbols-rounded" aria-hidden="true"><use href="#i-savings"></use></svg>
+                <p>Belum ada transaksi hari ini.</p>
+                <small>Tekan "masuk" atau "keluar" untuk mulai mencatat.</small>
+            </div>
+        `;
+        return;
+    }
+
+    // Semua transaksi hari ini ditampilkan tanpa paginasi
+    todayList.innerHTML = items.map(createHistoryRow).join("");
 }
 
 function saveAndRender() {
@@ -768,77 +958,9 @@ function saveAndRender() {
         historyFilter.walletId = "all";
     }
 
-    // Kelompokkan transaksi per tanggal, urut sesuai kemunculan (terbaru dulu)
-    const groups = [];
-    const groupByDate = new Map();
-
-    transactions
-        .filter(item => {
-            if (
-                historyFilter.walletId !== "all" &&
-                item.walletId !== historyFilter.walletId
-            ) {
-                return false;
-            }
-            if (
-                historyFilter.date !== "all" &&
-                (item.date || "") !== historyFilter.date
-            ) {
-                return false;
-            }
-            return true;
-        })
-        .forEach(item => {
-            // Normalisasi tipe agar tidak bisa dipakai menyisipkan atribut HTML
-            const type = item.type === "masuk" ? "masuk" : "keluar";
-            const amount = Number(item.amount) || 0;
-
-            const dateKey = item.date || "";
-            let group = groupByDate.get(dateKey);
-            if (!group) {
-                group = { date: dateKey, rows: [] };
-                groupByDate.set(dateKey, group);
-                groups.push(group);
-            }
-
-            group.rows.push(`
-            <div class="history-item ${type}${item.transfer ? " transfer" : ""}">
-                <div class="history-icon">
-                    <span class="material-symbols-rounded">${item.transfer ? "swap_horiz" : type === "masuk" ? "arrow_circle_down" : "arrow_circle_up"}</span>
-                </div>
-                <div class="keterangan">
-                    <p>${escapeHtml(item.description || "Tanpa keterangan")}</p>
-                    <small>${escapeHtml(getWalletName(item.walletId))}</small>
-                </div>
-                <span class="history-value">${type === "masuk" ? "+" : "-"}${amount.toLocaleString("id-ID")}</span>
-            </div>
-        `);
-        });
-
-    const groupsHtml = groups
-        .map(
-            group => `
-            <section class="history-group">
-                <div class="history-day">${escapeHtml(getDateLabel(group.date))}</div>
-                ${group.rows.join("")}
-            </section>
-        `
-        )
-        .join("");
-
-    const isFiltered =
-        historyFilter.walletId !== "all" || historyFilter.date !== "all";
-
-    // Satu kali tulis ke DOM, bukan innerHTML += di dalam loop
-    historyList.innerHTML = groups.length
-        ? groupsHtml
-        : `
-            <div class="empty-state">
-                <span class="material-symbols-rounded">${isFiltered ? "filter_list_off" : "savings"}</span>
-                <p>${isFiltered ? "Tidak ada transaksi untuk filter ini." : "Belum ada transaksi."}</p>
-                <small>${isFiltered ? "Coba ubah atau reset filternya." : 'Tekan "masuk" atau "keluar" untuk mulai mencatat.'}</small>
-            </div>
-        `;
+    // Riwayat dirender bertahap (lihat renderHistory)
+    renderHistory();
+    renderTodaySummary();
 
     sisaSaldo.innerText = formatRupiah(total);
     flowIn.innerText = formatRupiah(income);
@@ -848,11 +970,58 @@ function saveAndRender() {
     renderWallets();
 }
 
+// --- NAVIGASI ANTAR VIEW (hash) ---
+
+const VIEWS = ["beranda", "riwayat", "pengaturan"];
+const tabButtons = Array.from(document.querySelectorAll(".tab"));
+
+function getViewFromHash() {
+    const name = location.hash.replace(/^#\/?/, "").toLowerCase();
+    return VIEWS.includes(name) ? name : "beranda";
+}
+
+function renderView() {
+    const view = getViewFromHash();
+
+    document.querySelectorAll(".view").forEach(section => {
+        section.hidden = section.dataset.view !== view;
+    });
+
+    tabButtons.forEach(tab => {
+        if (tab.dataset.view === view) {
+            tab.setAttribute("aria-current", "page");
+        } else {
+            tab.removeAttribute("aria-current");
+        }
+    });
+
+    // Setiap pindah tab mulai dari atas; posisi scroll tidak diingat
+    const scrollArea = document.querySelector(`#view-${view} .view-scroll`);
+    if (scrollArea) scrollArea.scrollTop = 0;
+
+    // Hash tak dikenal dirapikan tanpa menambah entri riwayat baru
+    if (location.hash !== `#/${view}`) {
+        history.replaceState(null, "", `#/${view}`);
+    }
+}
+
+tabButtons.forEach(tab => {
+    tab.addEventListener("click", () => {
+        location.hash = `#/${tab.dataset.view}`;
+    });
+});
+
+document.getElementById("see-all-history").addEventListener("click", () => {
+    location.hash = "#/riwayat";
+});
+
+window.addEventListener("hashchange", renderView);
+
 // --- LOGIKA EXPORT & IMPORT ---
 
 // 1. Mengambil elemen tombol dari HTML
-const exportBtn = document.querySelector(".menu-button.export");
-const importBtn = document.querySelector(".menu-button.import");
+const exportBtn = document.querySelector(".settings-row.export");
+const importBtn = document.querySelector(".settings-row.import");
 
 // Backup lengkap: transaksi + daftar dompet beserta namanya
 function buildBackup() {
@@ -879,8 +1048,6 @@ exportBtn.addEventListener("click", () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    // Tutup dengan animasi GSAP
-    closeOverlay(menuOverlay, ".menu-window");
     alert("Data berhasil diekspor!");
 });
 
@@ -973,15 +1140,13 @@ fileInputHidden.addEventListener("change", processFile);
 importBtn.addEventListener("click", () => {
     console.log("Membuka file picker...");
 
-    // Tutup menu dengan animasi dulu
-    closeOverlay(menuOverlay, ".menu-window");
-
     // Klik input "gaib"
     fileInputHidden.click();
 });
 
 // Jalankan fungsi render pertama kali
 saveAndRender();
+renderView();
 
 // Registrasi PWA + pastikan pembaruan langsung dipakai
 if ("serviceWorker" in navigator) {
@@ -1020,9 +1185,6 @@ deleteAllBtn.addEventListener("click", () => {
 
         // 3. Simpan perubahan ke LocalStorage & Update UI
         saveAndRender();
-
-        // 4. Tutup menu dengan animasi GSAP
-        closeOverlay(menuOverlay, ".menu-window");
 
         alert("Semua data telah dibersihkan.");
     }

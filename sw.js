@@ -1,16 +1,18 @@
-const CACHE_NAME = "v2.5_cache";
-const urlsToCache = [
+// Skema versi: uangku-MAYOR.MINOR.PATCH
+// - MINOR (x1) naik setiap ada fitur baru
+// - PATCH (x2) naik setiap ada perbaikan bug
+const CACHE_NAME = "uangku-5.1.0";
+
+// Hanya aset inti yang di-precache. Ikon 512 dipakai saat instalasi PWA,
+// jadi tidak perlu ikut diunduh saat load pertama.
+const APP_SHELL = [
     "./",
     "./index.html",
     "./style.css",
     "./script.js",
     "./theme.css",
-    "./theme-dark.css",
-    "./icon-192.png", // Tambahkan ini
-    "./icon-512.png", // Tambahkan ini
-    "https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js",
-    "https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap",
-    "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    "./manifest.json",
+    "./icon-192.png"
 ];
 
 // Install Service Worker
@@ -18,9 +20,12 @@ self.addEventListener("install", event => {
     // Langsung aktifkan versi baru tanpa menunggu semua tab lama ditutup
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll(urlsToCache);
-        })
+        caches
+            .open(CACHE_NAME)
+            .then(cache => cache.addAll(APP_SHELL))
+            .catch(() => {
+                // Precaching gagal (mis. offline): tetap lanjut agar SW terpasang
+            })
     );
 });
 
@@ -40,11 +45,30 @@ self.addEventListener("activate", event => {
     );
 });
 
-// Fetch data dari cache jika offline
+// Sajikan dari cache lebih dulu (instan), lalu perbarui di latar belakang
 self.addEventListener("fetch", event => {
+    const request = event.request;
+    if (request.method !== "GET") return;
+
+    // Semua aset kini same-origin; request lain dibiarkan ke jaringan
+    if (new URL(request.url).origin !== self.location.origin) return;
+
     event.respondWith(
-        caches.match(event.request).then(response => {
-            return response || fetch(event.request);
+        caches.match(request).then(cached => {
+            const network = fetch(request)
+                .then(response => {
+                    if (response && response.ok) {
+                        const copy = response.clone();
+                        caches
+                            .open(CACHE_NAME)
+                            .then(cache => cache.put(request, copy))
+                            .catch(() => {});
+                    }
+                    return response;
+                })
+                .catch(() => cached);
+
+            return cached || network;
         })
     );
 });
